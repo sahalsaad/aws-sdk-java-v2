@@ -13,12 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.retry.v2;
+package software.amazon.awssdk.retry.backoff;
 
-/**
- * Super interface for {@link RetryPolicy} that defines a strategy for backing off between retries.
- */
+import software.amazon.awssdk.retry.RetryPolicyContext;
+import software.amazon.awssdk.retry.SdkDefaultRetryPolicies;
+
 public interface BackoffStrategy {
+
+    BackoffStrategy DEFAULT = new FullJitterBackoffStrategy(SdkDefaultRetryPolicies.BASE_DELAY,
+                                                            SdkDefaultRetryPolicies.MAX_BACKOFF_IN_MILLIS,
+                                                            SdkDefaultRetryPolicies.DEFAULT_NUM_RETRIES);
+
+    BackoffStrategy NONE = new FixedDelayBackoffStrategy(1);
 
     /**
      * Compute the delay before the next retry request. This strategy is only consulted when there will be a next retry.
@@ -27,4 +33,9 @@ public interface BackoffStrategy {
      * @return Amount of time in milliseconds to wait before the next attempt. Must be non-negative (can be zero).
      */
     long computeDelayBeforeNextRetry(RetryPolicyContext context);
+
+    default int calculateExponentialDelay(int retriesAttempted, int baseDelay, int maxBackoffTime, int maxRetries) {
+        int retries = Math.min(retriesAttempted, maxRetries);
+        return (int) Math.min((1L << retries) * baseDelay, maxBackoffTime);
+    }
 }

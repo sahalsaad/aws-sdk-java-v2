@@ -13,22 +13,23 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.retry.v2;
+package software.amazon.awssdk.retry.conditions;
 
 import static software.amazon.awssdk.util.ValidationUtils.assertNotNull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import software.amazon.awssdk.retry.RetryPolicyContext;
 
 /**
  * Retry condition implementation that retries if the HTTP status code matches one of the provided status codes.
  */
 public class RetryOnStatusCodeCondition implements RetryCondition {
 
-    private final List<Integer> statusCodesToRetryOn;
+    private final Set<Integer> statusCodesToRetryOn;
 
-    public RetryOnStatusCodeCondition(List<Integer> statusCodesToRetryOn) {
-        this.statusCodesToRetryOn = new ArrayList<Integer>(
+    public RetryOnStatusCodeCondition(Set<Integer> statusCodesToRetryOn) {
+        this.statusCodesToRetryOn = new HashSet<>(
                 assertNotNull(statusCodesToRetryOn, "statusCodesToRetryOn"));
     }
 

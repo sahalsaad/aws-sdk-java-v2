@@ -29,8 +29,7 @@ import software.amazon.awssdk.config.ClientConfiguration;
 import software.amazon.awssdk.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.interceptor.ClasspathInterceptorChainFactory;
 import software.amazon.awssdk.interceptor.ExecutionInterceptor;
-import software.amazon.awssdk.retry.PredefinedRetryPolicies;
-import software.amazon.awssdk.retry.RetryPolicyAdapter;
+import software.amazon.awssdk.retry.RetryPolicy;
 import software.amazon.awssdk.util.UserAgentUtils;
 
 /**
@@ -55,8 +54,7 @@ public final class GlobalClientConfigurationDefaults extends ClientConfiguration
         builder.advancedOption(CRC32_FROM_COMPRESSED_DATA_ENABLED,
                                applyDefault(configuration.advancedOption(CRC32_FROM_COMPRESSED_DATA_ENABLED), () -> false));
 
-        builder.retryPolicy(applyDefault(configuration.retryPolicy(), () ->
-                new RetryPolicyAdapter(PredefinedRetryPolicies.DEFAULT)));
+        builder.retryPolicy(applyDefault(configuration.retryPolicy(), () -> RetryPolicy.DEFAULT));
 
         // Put global interceptors before the ones currently configured.
         List<ExecutionInterceptor> globalInterceptors = new ClasspathInterceptorChainFactory().getGlobalInterceptors();

@@ -13,12 +13,23 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.retry;
+package software.amazon.awssdk.retry.conditions;
 
-import software.amazon.awssdk.retry.v2.BackoffStrategy;
+import software.amazon.awssdk.retry.RetryPolicyContext;
 
 /**
- * Adapter interface for backoff strategies that can be used in both legacy RetryPolicies and the new V2 retry policy.
+ * Simple retry condition that allows retries up to a certain max number of retries.
  */
-public interface V2CompatibleBackoffStrategy extends RetryPolicy.BackoffStrategy, BackoffStrategy {
+public class MaxNumberOfRetriesCondition implements RetryCondition {
+
+    private final int maxNumberOfRetries;
+
+    public MaxNumberOfRetriesCondition(int maxNumberOfRetries) {
+        this.maxNumberOfRetries = maxNumberOfRetries;
+    }
+
+    @Override
+    public boolean shouldRetry(RetryPolicyContext context) {
+        return context.retriesAttempted() < maxNumberOfRetries;
+    }
 }

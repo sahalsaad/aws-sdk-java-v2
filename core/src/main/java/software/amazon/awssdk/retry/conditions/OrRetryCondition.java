@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.retry.v2;
+package software.amazon.awssdk.retry.conditions;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import software.amazon.awssdk.retry.RetryPolicyContext;
 
 /**
  * Composite retry condition that evaluates to true if any containing condition evaluates to true.

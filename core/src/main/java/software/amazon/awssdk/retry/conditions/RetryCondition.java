@@ -13,12 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.retry.v2;
+package software.amazon.awssdk.retry.conditions;
 
-/**
- * Super interface for {@link RetryPolicy} used to define when a request should be retried.
- */
+import software.amazon.awssdk.retry.RetryPolicyContext;
+import software.amazon.awssdk.retry.SdkDefaultRetryPolicies;
+
 public interface RetryCondition {
+
+    RetryCondition DEFAULT = new OrRetryCondition(new RetryOnStatusCodeCondition(SdkDefaultRetryPolicies.RETRYABLE_STATUS_CODES),
+                                                  new RetryOnExceptionsCondition(SdkDefaultRetryPolicies.RETRYABLE_EXCEPTIONS),
+                                                  new RetryOnErrorCodeCondition(SdkDefaultRetryPolicies.RETRYABLE_ERROR_CODES));
+
+    RetryCondition NONE = new MaxNumberOfRetriesCondition(0);
 
     /**
      * Determine whether a request should or should not be retried.
