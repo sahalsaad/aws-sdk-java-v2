@@ -17,6 +17,7 @@ package software.amazon.awssdk.codegen.poet;
 
 import com.squareup.javapoet.ClassName;
 import software.amazon.awssdk.codegen.model.intermediate.IntermediateModel;
+import software.amazon.awssdk.utils.StringUtils;
 
 /**
  * Extension and convenience methods to Poet that use the intermediate model.
@@ -68,4 +69,16 @@ public class PoetExtensions {
     public ClassName getClientClass(String className) {
         return ClassName.get(model.getMetadata().getFullClientPackageName(), className);
     }
+
+    /**
+     * @param operationName Name of the operation
+     * @return A Poet {@link ClassName} for the response type of a paginated operation in the base service package.
+     *
+     * Example: If operationName is "ListTables", then the response type of the paginated operation
+     * will be "ListTablesPaginator" class in the base service package.
+     */
+    public ClassName getResponseClassForPaginatedOperation(String operationName) {
+        return ClassName.get(model.getMetadata().getFullModelPackageName(), operationName + "Paginator");
+    }
+
 }

@@ -1,0 +1,10 @@
+{
+  "pagination": {
+    "ListStreams": {
+      "input_token": "ExclusiveStartStreamArn",
+      "limit_key": "Limit",
+      "output_token": "LastEvaluatedStreamArn",
+      "result_key": "Streams"
+    }
+  }
+}

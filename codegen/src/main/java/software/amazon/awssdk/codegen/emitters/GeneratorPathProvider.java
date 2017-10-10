@@ -62,6 +62,10 @@ public class GeneratorPathProvider {
         return sourceDirectory + "/" + Utils.packageToDirectory(model.getMetadata().getFullWaitersPackageName());
     }
 
+    public String getPaginatorsDirectory() {
+        return sourceDirectory + "/" + Utils.packageToDirectory(model.getMetadata().getFullPaginatorsPackageName());
+    }
+
     public String getPolicyEnumDirectory() {
         return sourceDirectory + "/" + Constants.AUTH_POLICY_ENUM_CLASS_DIR;
     }

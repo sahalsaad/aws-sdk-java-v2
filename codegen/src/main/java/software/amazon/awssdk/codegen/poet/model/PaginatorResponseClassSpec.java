@@ -1,0 +1,394 @@
+/*
+ * Copyright 2011-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ *
+ *    http://aws.amazon.com/apache2.0
+ *
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+ * OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package software.amazon.awssdk.codegen.poet.model;
+
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
+import software.amazon.awssdk.codegen.model.intermediate.IntermediateModel;
+import software.amazon.awssdk.codegen.model.intermediate.MemberModel;
+import software.amazon.awssdk.codegen.model.intermediate.OperationModel;
+import software.amazon.awssdk.codegen.model.service.PaginatorDefinition;
+import software.amazon.awssdk.codegen.poet.ClassSpec;
+import software.amazon.awssdk.codegen.poet.PoetExtensions;
+import software.amazon.awssdk.codegen.poet.PoetUtils;
+import software.amazon.awssdk.pagination.Paginated;
+import software.amazon.awssdk.pagination.PaginatedItemsIterable;
+import software.amazon.awssdk.pagination.PaginatedResponsesIterable;
+import software.amazon.awssdk.pagination.SdkIterable;
+
+import javax.lang.model.element.Modifier;
+import java.security.InvalidParameterException;
+import java.util.Iterator;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * Java poet {@link ClassSpec} to generate the response class for sync paginated operations.
+ *
+ * Sample of a generated class:
+
+    @Generated("software.amazon.awssdk:codegen")
+    public final class ListTablesPaginator implements Paginated<ListTablesResponse, String> {
+        private final DynamoDBClient client;
+
+        private final ListTablesRequest firstRequest;
+
+        private final ListTablesResponse firstResponsePage;
+
+        public ListTablesPaginator(final DynamoDBClient client, final ListTablesRequest firstRequest,
+            final ListTablesResponse firstResponsePage) {
+            this.client = client;
+            this.firstRequest = firstRequest;
+            this.firstResponsePage = firstResponsePage;
+        }
+
+        @Override
+            public ListTablesResponse firstPage() {
+            return firstResponsePage;
+        }
+
+        @Override
+        public Iterator<ListTablesResponse> iterator() {
+            Predicate<ListTablesResponse> hasNextResponse = response -> response != null;
+
+            Function<ListTablesResponse, ListTablesResponse> getNextResponse = response -> {
+                if (response == null || response.lastEvaluatedTableName() == null) {
+                    return null;
+                } else {
+                    return client.listTables(firstRequest.toBuilder().exclusiveStartTableName(response.lastEvaluatedTableName())
+                                .build());
+                 }
+            };
+
+            return new PaginatedResponsesIterable(firstResponsePage, getNextResponse).iterator();
+        }
+
+        @Override
+        public SdkIterable<String> allItems() {
+            Function<ListTablesResponse, Iterator<String>> getPaginatedMemberIterator = response -> response != null ? response
+                        .tableNames().iterator() : null;
+
+            return new PaginatedItemsIterable(iterator(), getPaginatedMemberIterator);
+        }
+
+        public SdkIterable<String> tableNames() {
+            return allItems();
+        }
+    }
+ */
+public class PaginatorResponseClassSpec implements ClassSpec {
+
+    private static final String CLIENT_MEMBER = "client";
+    private static final String REQUEST_MEMBER = "firstRequest";
+    private static final String RESPONSE_MEMBER = "firstResponsePage";
+    private static final String ALL_ITEMS_METHOD = "allItems";
+
+    private final IntermediateModel model;
+    private final PoetExtensions poetExtensions;
+    private final TypeProvider typeProvider;
+    private final String c2jOperationName;
+    private final PaginatorDefinition paginatorDefinition;
+    private final OperationModel operationModel;
+
+    public PaginatorResponseClassSpec(IntermediateModel intermediateModel,
+                                      String c2jOperationName,
+                                      PaginatorDefinition paginatorDefinition) {
+
+        this.model = intermediateModel;
+        this.poetExtensions = new PoetExtensions(intermediateModel);
+        this.typeProvider = new TypeProvider(intermediateModel);
+        this.c2jOperationName = c2jOperationName;
+        this.paginatorDefinition = paginatorDefinition;
+        this.operationModel = model.getOperation(c2jOperationName);
+    }
+
+    @Override
+    public TypeSpec poetSpec() {
+        TypeSpec.Builder specBuilder = TypeSpec.classBuilder(className())
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addAnnotation(PoetUtils.GENERATED)
+                .addSuperinterface(getPaginatedInterface())
+                .addFields(Stream.of(syncClientInterfaceField(), requestClassField(), responseClassField())
+                        .collect(Collectors.toList()))
+                .addMethod(constructor())
+                .addMethod(firstPageMethod())
+                .addMethod(iteratorMethod())
+                .addMethod(allItemsMethod())
+                .addMethod(methodSimilarToPaginatedMemberName());
+
+        return specBuilder.build();
+    }
+
+    @Override
+    public ClassName className() {
+        return poetExtensions.getResponseClassForPaginatedOperation(c2jOperationName);
+    }
+
+    /**
+     * Returns the interface that is implemented by the Paginated Response class.
+     */
+    private TypeName getPaginatedInterface() {
+        return ParameterizedTypeName.get(ClassName.get(Paginated.class), responseType(), getPaginatedMemberType());
+    }
+
+    /**
+     * @return A Poet {@link ClassName} for the sync operation request type.
+     *
+     * Example: For ListTables operation, it will be "ListTablesRequest" class.
+     */
+    private ClassName requestType() {
+        return poetExtensions.getModelClass(operationModel.getInput().getVariableType());
+    }
+
+    /**
+     * @return A Poet {@link ClassName} for the sync operation response type.
+     *
+     * Example: For ListTables operation, it will be "ListTablesResponse" class.
+     */
+    private ClassName responseType() {
+        return poetExtensions.getModelClass(operationModel.getReturnType().getReturnType());
+    }
+
+    /**
+     * @return A Poet {@link ClassName} for the sync client interface
+     */
+    private ClassName getClientInterfaceName() {
+        return poetExtensions.getClientClass(model.getMetadata().getSyncInterface());
+    }
+
+    private FieldSpec syncClientInterfaceField() {
+        return FieldSpec.builder(getClientInterfaceName(), CLIENT_MEMBER, Modifier.PRIVATE, Modifier.FINAL).build();
+    }
+
+    private FieldSpec requestClassField() {
+        return FieldSpec.builder(requestType(),REQUEST_MEMBER, Modifier.PRIVATE, Modifier.FINAL).build();
+    }
+
+    private FieldSpec responseClassField() {
+        return FieldSpec.builder(responseType(),RESPONSE_MEMBER, Modifier.PRIVATE, Modifier.FINAL).build();
+    }
+
+    private MethodSpec constructor() {
+        return MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(getClientInterfaceName(), CLIENT_MEMBER, Modifier.FINAL)
+                .addParameter(requestType(), REQUEST_MEMBER, Modifier.FINAL)
+                .addParameter(responseType(), RESPONSE_MEMBER, Modifier.FINAL)
+                .addStatement("this.$L = $L", CLIENT_MEMBER, CLIENT_MEMBER)
+                .addStatement("this.$L = $L", REQUEST_MEMBER, REQUEST_MEMBER)
+                .addStatement("this.$L = $L", RESPONSE_MEMBER, RESPONSE_MEMBER)
+                .build();
+    }
+
+    /**
+     * A {@link MethodSpec} for the firstPage() method which returns the
+     * first response page for the paginated operation.
+     */
+    private MethodSpec firstPageMethod() {
+        return MethodSpec.methodBuilder("firstPage")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(responseType())
+                .addStatement("return $L", RESPONSE_MEMBER)
+                .build();
+    }
+
+    /**
+     * A {@link MethodSpec} for the overridden iterator() method which is inherited
+     * from the interface.
+     */
+    private MethodSpec iteratorMethod() {
+        return MethodSpec.methodBuilder("iterator")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(ParameterizedTypeName.get(ClassName.get(Iterator.class), responseType()))
+                .addStatement("$T hasNextResponse = response -> response != null",
+                        ParameterizedTypeName.get(ClassName.get(Predicate.class), responseType()))
+                .addCode("\n")
+                .addCode(getNextResponseBlock())
+                .addCode("\n")
+                .addStatement("return new $T($L, $L).iterator()", PaginatedResponsesIterable.class,
+                        RESPONSE_MEMBER, "getNextResponse")
+                .build();
+    }
+
+    /**
+     * Returns {@link CodeBlock} representing a {@link Function} that takes a response as input
+     * and returns the next response as output.
+     *
+     * A sample from dynamodb listTables paginator:
+     *
+     *  Function<ListTablesResponse, ListTablesResponse> getNextResponse = response -> {
+     *      if (response == null || response.lastEvaluatedTableName() == null) {
+     *          return null;
+     *      } else {
+     *          return client.listTables(firstRequest.toBuilder()
+     *          .exclusiveStartTableName(response.lastEvaluatedTableName())
+     *          .build());
+     *      }
+     *  };
+     *
+     */
+    private CodeBlock getNextResponseBlock() {
+        CodeBlock ifElseBlock = CodeBlock.builder()
+                .beginControlFlow("if (response == null || response.$L() == null)", fluentGetterNameForOutputToken())
+                .addStatement("return null")
+                .nextControlFlow("else")
+                .addStatement("return client.$L(firstRequest.toBuilder().$L(response.$L()).build())",
+                        operationModel.getMethodName(), fluentSetterNameForInputToken(), fluentGetterNameForOutputToken())
+                .endControlFlow()
+                .build();
+
+        return CodeBlock.builder()
+                .add("$T getNextResponse = response -> {\n",
+                        ParameterizedTypeName.get(ClassName.get(Function.class), responseType(), responseType()))
+                .add(ifElseBlock)
+                .addStatement("}")
+                .build();
+    }
+
+    /**
+     * @return the fluent getter method name for {@link PaginatorDefinition#getOutputToken()}
+     * member in the response.
+     */
+    private String fluentGetterNameForOutputToken() {
+        return operationModel.getOutputShape()
+                .findMemberModelByC2jName(paginatorDefinition.getOutputToken())
+                .getFluentGetterMethodName();
+    }
+
+    /**
+     * @return the fluent setter method name for {@link PaginatorDefinition#getInputToken()}
+     * member in the request.
+     */
+    private String fluentSetterNameForInputToken() {
+        return operationModel.getInputShape()
+                .findMemberModelByC2jName(paginatorDefinition.getInputToken())
+                .getFluentSetterMethodName();
+    }
+
+    /**
+     * @return the fluent getter name for {@link PaginatorDefinition#getResultKey()}
+     * member in the response
+     */
+    private String fluentGetterNameForResultKey() {
+        return memberModelForResultKey().getFluentGetterMethodName();
+    }
+
+    private MemberModel memberModelForResultKey() {
+        return operationModel.getOutputShape().getMemberByC2jName(paginatorDefinition.getResultKey());
+    }
+
+    /**
+     * @return A {@link MethodSpec} for the overridden #ALL_ITEMS_METHOD method that returns
+     * an iterable for iterating through the paginated items across responses.
+     *
+     * A sample from dynamodb listTables paginator:
+     *
+     *  @Override
+     *  public SdkIterable<String> allItems() {
+     *     Function<ListTablesResponse, Iterator<String>> getPaginatedItemIterator =
+     *              response -> response != null ? response.tableNames().iterator() : null;
+     *
+     *     return new PaginatedItemsIterable(iterator(), getPaginatedItemIterator);
+     *  }
+     *
+     */
+    private MethodSpec allItemsMethod() {
+        return MethodSpec.methodBuilder("allItems")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(ParameterizedTypeName.get(ClassName.get(SdkIterable.class), getPaginatedMemberType()))
+                .addCode("$T getPaginatedMemberIterator = ",
+                        ParameterizedTypeName.get(ClassName.get(Function.class), responseType(),
+                                ParameterizedTypeName.get(ClassName.get(Iterator.class), getPaginatedMemberType())))
+                .addCode(getPaginatedMemberIteratorLambdaBlock())
+                .addCode("\n")
+                .addStatement("return new $T(iterator(), getPaginatedMemberIterator)", PaginatedItemsIterable.class)
+                .build();
+    }
+
+    private CodeBlock getPaginatedMemberIteratorLambdaBlock() {
+        MemberModel resultKeyModel = memberModelForResultKey();
+
+        CodeBlock iteratorBlock = null;
+
+        if (resultKeyModel.isList()) {
+            iteratorBlock = CodeBlock.builder().add("response.$L().iterator()", fluentGetterNameForResultKey())
+                    .build();
+
+        } else if (resultKeyModel.isMap()) {
+            iteratorBlock = CodeBlock.builder().add("response.$L().entrySet().iterator()", fluentGetterNameForResultKey())
+                    .build();
+        }
+
+        return CodeBlock.builder().addStatement("response -> response != null ? $L : null", iteratorBlock).build();
+    }
+
+    /**
+     * @return A {@link MethodSpec} for the convenience method whose name is based on
+     * the paginated member. This gives clarity for the user when working with paginated members
+     * of primitive types.
+     *
+     * For example, the paginated member in dynamodb listTables operation is "tableNames" which is list of Strings.
+     * It is not clear what the member is when using the allItems() method which returns SdkIterable<String>.
+     * So this convenient method is named tableNames() to improve clarity.
+     */
+    private MethodSpec methodSimilarToPaginatedMemberName() {
+        return MethodSpec.methodBuilder(fluentGetterNameForResultKey())
+                .addModifiers(Modifier.PUBLIC)
+                .returns(ParameterizedTypeName.get(ClassName.get(SdkIterable.class), getPaginatedMemberType()))
+                .addStatement("return $L()", ALL_ITEMS_METHOD)
+                .build();
+    }
+
+    /**
+     * @return  A {@link TypeName} of the paginated member in the response.
+     *
+     * Examples:
+     * If paginated item is represented as List<String>, then member type is String.
+     * If paginated item is represented as List<Foo>, then member type is Foo.
+     * If paginated item is represented as Map<String, List<Foo>>,
+     *              then member type is Map.Entry<String, List<Foo>>.
+     */
+    private TypeName getPaginatedMemberType() {
+
+        MemberModel resultKeyModel = memberModelForResultKey();
+
+        if (resultKeyModel == null) {
+            throw new InvalidParameterException("MemberModel is not found for result key: " + paginatorDefinition.getResultKey());
+        }
+
+        if (resultKeyModel.isList()) {
+            return typeProvider.fieldType(resultKeyModel.getListModel().getListMemberModel());
+
+        } else if (resultKeyModel.isMap()) {
+            // TODO investigate why using mapEntryType() fails when paginated member is Map
+            return typeProvider.mapEntryType(resultKeyModel.getMapModel());
+
+        } else {
+            throw new IllegalArgumentException("Result key for " + c2jOperationName +
+                    " operation in paginators file should be either a list or a map.");
+        }
+    }
+
+}

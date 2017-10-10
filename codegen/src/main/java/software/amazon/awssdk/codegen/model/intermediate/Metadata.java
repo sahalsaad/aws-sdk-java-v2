@@ -71,6 +71,8 @@ public class Metadata {
 
     private String waitersPackageName;
 
+    private String paginatorsPackageName;
+
     private String authPolicyPackageName;
 
     private String smokeTestsPackageName;
@@ -449,6 +451,23 @@ public class Metadata {
 
     public Metadata withWaitersPackageName(String waitersPackageName) {
         setWaitersPackageName(waitersPackageName);
+        return this;
+    }
+
+    public String getFullPaginatorsPackageName() {
+        return joinPackageNames(rootPackageName, getPaginatorsPackageName());
+    }
+
+    public String getPaginatorsPackageName() {
+        return paginatorsPackageName;
+    }
+
+    public void setPaginatorsPackageName(String paginatorsPackageName) {
+        this.paginatorsPackageName = paginatorsPackageName;
+    }
+
+    public Metadata withPaginatorsPackageName(String paginatorsPackageName) {
+        setPaginatorsPackageName(paginatorsPackageName);
         return this;
     }
 

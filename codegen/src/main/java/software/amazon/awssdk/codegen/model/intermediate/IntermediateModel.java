@@ -28,6 +28,7 @@ import software.amazon.awssdk.codegen.model.config.customization.CustomizationCo
 import software.amazon.awssdk.core.AmazonWebServiceResult;
 import software.amazon.awssdk.core.ResponseMetadata;
 import software.amazon.awssdk.core.util.ValidationUtils;
+import software.amazon.awssdk.codegen.model.service.PaginatorDefinition;
 import software.amazon.awssdk.utils.IoUtils;
 
 public final class IntermediateModel {
@@ -52,6 +53,9 @@ public final class IntermediateModel {
     @JsonIgnore
     private final Map<String, WaiterDefinitionModel> waiters;
 
+    @JsonIgnore
+    private final Map<String, PaginatorDefinition> paginators;
+
     @JsonCreator
     public IntermediateModel(
             @JsonProperty("metadata") Metadata metadata,
@@ -60,7 +64,8 @@ public final class IntermediateModel {
             @JsonProperty("customizationConfig") CustomizationConfig customizationConfig,
             @JsonProperty("serviceExamples") ServiceExamples examples) {
 
-        this(metadata, operations, shapes, customizationConfig, examples, Collections.emptyMap(), Collections.emptyMap());
+        this(metadata, operations, shapes, customizationConfig, examples, Collections.emptyMap(),
+                Collections.emptyMap(), Collections.emptyMap());
     }
 
     public IntermediateModel(
@@ -70,7 +75,8 @@ public final class IntermediateModel {
             CustomizationConfig customizationConfig,
             ServiceExamples examples,
             Map<String, WaiterDefinitionModel> waiters,
-            Map<String, AuthorizerModel> customAuthorizers) {
+            Map<String, AuthorizerModel> customAuthorizers,
+            Map<String, PaginatorDefinition> paginators) {
         this.metadata = metadata;
         this.operations = operations;
         this.shapes = shapes;
@@ -78,6 +84,7 @@ public final class IntermediateModel {
         this.examples = examples;
         this.waiters = ValidationUtils.assertNotNull(waiters, "waiters");
         this.customAuthorizers = customAuthorizers;
+        this.paginators = paginators;
     }
 
     public Metadata getMetadata() {
@@ -110,6 +117,10 @@ public final class IntermediateModel {
 
     public Map<String, WaiterDefinitionModel> getWaiters() {
         return waiters;
+    }
+
+    public Map<String, PaginatorDefinition> getPaginators() {
+        return paginators;
     }
 
     /**
@@ -167,6 +178,10 @@ public final class IntermediateModel {
 
     public boolean getHasWaiters() {
         return waiters.size() > 0;
+    }
+
+    public boolean getHasPaginators() {
+        return paginators.size() > 0;
     }
 
     public String getSdkBaseResponseFqcn() {

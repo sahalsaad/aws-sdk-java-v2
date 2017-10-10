@@ -44,6 +44,7 @@ import software.amazon.awssdk.codegen.model.intermediate.ShapeModel;
 import software.amazon.awssdk.codegen.model.intermediate.WaiterDefinitionModel;
 import software.amazon.awssdk.codegen.model.service.AuthType;
 import software.amazon.awssdk.codegen.model.service.Operation;
+import software.amazon.awssdk.codegen.model.service.Paginators;
 import software.amazon.awssdk.codegen.model.service.ServiceModel;
 import software.amazon.awssdk.codegen.model.service.Waiters;
 import software.amazon.awssdk.codegen.naming.DefaultNamingStrategy;
@@ -65,6 +66,7 @@ public class IntermediateModelBuilder {
     private final TypeUtils typeUtils;
     private final List<IntermediateModelShapeProcessor> shapeProcessors;
     private final Waiters waiters;
+    private final Paginators paginators;
 
     public IntermediateModelBuilder(C2jModels models) {
         this.customConfig = models.customizationConfig();
@@ -75,6 +77,7 @@ public class IntermediateModelBuilder {
         this.typeUtils = new TypeUtils(namingStrategy);
         this.shapeProcessors = createShapeProcessors();
         this.waiters = models.waitersModel();
+        this.paginators = models.paginatorsModel();
     }
 
 
@@ -123,7 +126,7 @@ public class IntermediateModelBuilder {
 
         IntermediateModel fullModel = new IntermediateModel(
             constructMetadata(service, codeGenConfig, customConfig), operations, shapes,
-            customConfig, examples, waiters, authorizers);
+            customConfig, examples, waiters, authorizers, paginators.getPaginators());
 
         customization.postprocess(fullModel);
 
@@ -139,7 +142,8 @@ public class IntermediateModelBuilder {
                                                                fullModel.getCustomizationConfig(),
                                                                fullModel.getExamples(),
                                                                fullModel.getWaiters(),
-                                                               fullModel.getCustomAuthorizers());
+                                                               fullModel.getCustomAuthorizers(),
+                                                               fullModel.getPaginators());
 
         linkMembersToShapes(trimmedModel);
         linkOperationsToInputOutputShapes(trimmedModel);
