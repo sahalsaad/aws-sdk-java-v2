@@ -15,6 +15,7 @@
 
 package software.amazon.awssdk.utils;
 
+import java.time.Duration;
 import software.amazon.awssdk.annotation.ReviewBeforeRelease;
 
 public class NumericUtils {
@@ -36,5 +37,64 @@ public class NumericUtils {
             return Integer.MIN_VALUE;
         }
         return (int) value;
+    }
+
+    /**
+     * Asserts that the given number is positive (non-negative and non-zero).
+     *
+     * @param num Number to validate
+     * @param fieldName Field name to display in exception message if not positive.
+     * @return Number if positive.
+     */
+    public static int assertIsPositive(int num, String fieldName) {
+        if (num <= 0) {
+            throw new IllegalArgumentException(String.format("%s must be positive", fieldName));
+        }
+        return num;
+    }
+
+    public static int assertIsPositive(int num, String fieldName, boolean zeroIsPositive) {
+        if (zeroIsPositive && num >= 0) {
+            return num;
+        }
+
+        return assertIsPositive(num, fieldName);
+    }
+
+    /**
+     * Asserts that the given duration is positive (non-negative and non-zero).
+     *
+     * @param duration Number to validate
+     * @param fieldName Field name to display in exception message if not positive.
+     * @return Duration if positive.
+     */
+    public static Duration assertIsPositive(Duration duration, String fieldName) {
+        if (duration == null) {
+            throw new IllegalArgumentException(String.format("%s cannot be null", fieldName));
+        }
+
+        if (duration.isNegative() || duration.isZero()) {
+            throw new IllegalArgumentException(String.format("%s must be positive", fieldName));
+        }
+        return duration;
+    }
+
+    /**
+     * Asserts that the given duration is positive (non-negative and non-zero).
+     *
+     * @param duration Number to validate
+     * @param fieldName Field name to display in exception message if not positive.
+     * @return Duration if positive.
+     */
+    public static Duration assertIsPositive(Duration duration, String fieldName, boolean zeroIsPositive) {
+        if (duration == null) {
+            throw new IllegalArgumentException(String.format("%s cannot be null", fieldName));
+        }
+
+        if (!duration.isNegative() && zeroIsPositive) {
+            return duration;
+        }
+
+        return assertIsPositive(duration, fieldName);
     }
 }

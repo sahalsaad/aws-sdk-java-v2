@@ -15,27 +15,41 @@
 
 package software.amazon.awssdk.retry.backoff;
 
+import static software.amazon.awssdk.utils.NumericUtils.assertIsPositive;
+
+import java.time.Duration;
 import java.util.Random;
 import software.amazon.awssdk.retry.RetryPolicyContext;
 
-public class FullJitterBackoffStrategy implements BackoffStrategy {
+/**
+ * Backoff strategy that uses a full jitter strategy for computing the next backoff delay. A full jitter
+ * strategy will always compute a new random delay between 0 and the computed exponential backoff for each
+ * subsequent request.
+ *
+ * For example, using a base delay of 100, a max backoff time of 10000 an exponential delay of 400 is computed
+ * for a second retry attempt. The final computed delay before the next retry will then be in the range of 0 to 400.
+ *
+ * This is in contrast to {@link EqualJitterBackoffStrategy} that computes a new random delay where the final
+ * computed delay before the next retry will be at least half of the computed exponential delay.
+ */
+public final class FullJitterBackoffStrategy implements BackoffStrategy {
 
-    private final int baseDelay;
-    private final int maxBackoffTime;
+    private final Duration baseDelay;
+    private final Duration maxBackoffTime;
     private final int numRetries;
     private final Random random = new Random();
 
-    public FullJitterBackoffStrategy(final int baseDelay,
-                                     final int maxBackoffTime,
+    public FullJitterBackoffStrategy(final Duration baseDelay,
+                                     final Duration maxBackoffTime,
                                      final int numRetries) {
-        this.baseDelay = baseDelay;
-        this.maxBackoffTime = maxBackoffTime;
+        this.baseDelay = assertIsPositive(baseDelay, "baseDelay", true);
+        this.maxBackoffTime = assertIsPositive(maxBackoffTime, "maxBackoffTime", true);
         this.numRetries = numRetries;
     }
 
     @Override
-    public long computeDelayBeforeNextRetry(RetryPolicyContext context) {
+    public Duration computeDelayBeforeNextRetry(RetryPolicyContext context) {
         int ceil = calculateExponentialDelay(context.retriesAttempted(), baseDelay, maxBackoffTime, numRetries);
-        return random.nextInt(ceil);
+        return Duration.ofMillis(random.nextInt(ceil));
     }
 }

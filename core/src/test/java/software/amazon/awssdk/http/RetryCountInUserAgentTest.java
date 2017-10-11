@@ -23,7 +23,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.Assert.fail;
-import static software.amazon.awssdk.http.pipeline.stages.RetryableStage.HEADER_SDK_RETRY_INFO;
+import static software.amazon.awssdk.retry.RetryHandler.HEADER_SDK_RETRY_INFO;
 
 import org.junit.Test;
 import software.amazon.awssdk.AmazonServiceException;
@@ -32,10 +32,8 @@ import software.amazon.awssdk.config.MutableClientConfiguration;
 import software.amazon.awssdk.config.defaults.GlobalClientConfigurationDefaults;
 import software.amazon.awssdk.internal.http.timers.ClientExecutionAndRequestTimerTestUtils;
 import software.amazon.awssdk.retry.RetryPolicy;
-import software.amazon.awssdk.retry.RetryPolicyAdapter;
 import utils.HttpTestUtils;
 import utils.http.WireMockTestBase;
-import utils.retry.AlwaysRetryCondition;
 import utils.retry.SimpleArrayBackoffStrategy;
 
 public class RetryCountInUserAgentTest extends WireMockTestBase {
@@ -69,11 +67,13 @@ public class RetryCountInUserAgentTest extends WireMockTestBase {
     }
 
     private void executeRequest() throws Exception {
+        RetryPolicy policy = RetryPolicy.builder().backoffStrategy(new SimpleArrayBackoffStrategy(BACKOFF_VALUES)).build();
+
         ClientOverrideConfiguration overrideConfig =
-                ClientOverrideConfiguration.builder().retryPolicy(buildRetryPolicy()).build();
+            ClientOverrideConfiguration.builder().retryPolicy(policy).build();
         MutableClientConfiguration clientConfiguration = new MutableClientConfiguration()
-                .overrideConfiguration(overrideConfig)
-                .httpClient(HttpTestUtils.testSdkHttpClient());
+            .overrideConfiguration(overrideConfig)
+            .httpClient(HttpTestUtils.testSdkHttpClient());
 
         new GlobalClientConfigurationDefaults().applySyncDefaults(clientConfiguration);
 
@@ -90,10 +90,4 @@ public class RetryCountInUserAgentTest extends WireMockTestBase {
             // Ignored or expected.
         }
     }
-
-    private RetryPolicyAdapter buildRetryPolicy() {
-        return new RetryPolicyAdapter(
-                new RetryPolicy(new AlwaysRetryCondition(), new SimpleArrayBackoffStrategy(BACKOFF_VALUES), 3, false));
-    }
-
 }

@@ -18,6 +18,7 @@ package software.amazon.awssdk.retry;
 import software.amazon.awssdk.SdkBaseException;
 import software.amazon.awssdk.annotation.Immutable;
 import software.amazon.awssdk.annotation.SdkInternalApi;
+import software.amazon.awssdk.http.ExecutionContext;
 import software.amazon.awssdk.http.SdkHttpFullRequest;
 
 /**
@@ -30,17 +31,20 @@ public class RetryPolicyContext {
     private final Object originalRequest;
     private final SdkHttpFullRequest request;
     private final SdkBaseException exception;
+    private final ExecutionContext executionContext;
     private final int retriesAttempted;
     private final Integer httpStatusCode;
 
     private RetryPolicyContext(Object originalRequest,
                                SdkHttpFullRequest request,
                                SdkBaseException exception,
+                               ExecutionContext executionContext,
                                int retriesAttempted,
                                Integer httpStatusCode) {
         this.originalRequest = originalRequest;
         this.request = request;
         this.exception = exception;
+        this.executionContext = executionContext;
         this.retriesAttempted = retriesAttempted;
         this.httpStatusCode = httpStatusCode;
     }
@@ -72,6 +76,13 @@ public class RetryPolicyContext {
     }
 
     /**
+     * @return Mutable execution context.
+     */
+    public ExecutionContext executionContext() {
+        return this.executionContext;
+    }
+
+    /**
      * @return Number of retries attempted thus far.
      */
     public int retriesAttempted() {
@@ -98,6 +109,7 @@ public class RetryPolicyContext {
         private Object originalRequest;
         private SdkHttpFullRequest request;
         private SdkBaseException exception;
+        private ExecutionContext executionContext;
         private int retriesAttempted;
         private Integer httpStatusCode;
 
@@ -119,6 +131,11 @@ public class RetryPolicyContext {
             return this;
         }
 
+        public Builder executionContext(ExecutionContext executionContext) {
+            this.executionContext = executionContext;
+            return this;
+        }
+
         public Builder retriesAttempted(int retriesAttempted) {
             this.retriesAttempted = retriesAttempted;
             return this;
@@ -130,7 +147,12 @@ public class RetryPolicyContext {
         }
 
         public RetryPolicyContext build() {
-            return new RetryPolicyContext(originalRequest, request, exception, retriesAttempted, httpStatusCode);
+            return new RetryPolicyContext(originalRequest,
+                                          request,
+                                          exception,
+                                          executionContext,
+                                          retriesAttempted,
+                                          httpStatusCode);
         }
 
     }

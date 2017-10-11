@@ -24,6 +24,7 @@ public class RetryOnErrorCodeCondition implements RetryCondition {
 
     private final Set<String> retryableErrorCodes;
 
+    // TODO: Switch to varargs and Set.of()
     public RetryOnErrorCodeCondition(Set<String> retryableErrorCodes) {
         this.retryableErrorCodes = new HashSet<>(retryableErrorCodes);
     }

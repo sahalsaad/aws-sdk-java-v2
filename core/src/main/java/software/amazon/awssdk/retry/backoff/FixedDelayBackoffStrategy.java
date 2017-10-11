@@ -15,23 +15,24 @@
 
 package software.amazon.awssdk.retry.backoff;
 
-import static software.amazon.awssdk.util.ValidationUtils.assertIsPositive;
+import static software.amazon.awssdk.utils.NumericUtils.assertIsPositive;
 
+import java.time.Duration;
 import software.amazon.awssdk.retry.RetryPolicyContext;
 
 /**
- * Simple backoff strategy that always uses a fixed delay.
+ * Simple backoff strategy that always uses a fixed delay for the delay before the next retry attempt.
  */
-public class FixedDelayBackoffStrategy implements BackoffStrategy {
+public final class FixedDelayBackoffStrategy implements BackoffStrategy {
 
-    private final int fixedBackoff;
+    private final Duration fixedBackoff;
 
-    public FixedDelayBackoffStrategy(int fixedBackoff) {
-        this.fixedBackoff = assertIsPositive(fixedBackoff, "fixedBackoff");
+    public FixedDelayBackoffStrategy(Duration fixedBackoff) {
+        this.fixedBackoff = assertIsPositive(fixedBackoff, "fixedBackoff", true);
     }
 
     @Override
-    public long computeDelayBeforeNextRetry(RetryPolicyContext context) {
+    public Duration computeDelayBeforeNextRetry(RetryPolicyContext context) {
         return fixedBackoff;
     }
 }

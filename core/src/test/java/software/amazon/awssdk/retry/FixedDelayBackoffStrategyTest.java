@@ -17,24 +17,16 @@ package software.amazon.awssdk.retry;
 
 import static org.junit.Assert.assertEquals;
 
+import java.time.Duration;
 import org.junit.Test;
 import software.amazon.awssdk.retry.backoff.FixedDelayBackoffStrategy;
 
 public class FixedDelayBackoffStrategyTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void negativeBackoff_ThrowsException() {
-        new FixedDelayBackoffStrategy(-1);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void zeroBackoff_ThrowsException() {
-        new FixedDelayBackoffStrategy(0);
-    }
-
     @Test
     public void positiveBackoff_ReturnsFixedBackoffOnDelay() {
-        long delay = new FixedDelayBackoffStrategy(100).computeDelayBeforeNextRetry(RetryPolicyContexts.EMPTY);
+        long delay = new FixedDelayBackoffStrategy(Duration.ofMillis(100)).computeDelayBeforeNextRetry(RetryPolicyContexts.EMPTY)
+                                                                          .toMillis();
         assertEquals(100, delay);
     }
 

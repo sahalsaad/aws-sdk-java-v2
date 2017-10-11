@@ -16,13 +16,13 @@
 package software.amazon.awssdk.retry.conditions;
 
 import software.amazon.awssdk.retry.RetryPolicyContext;
-import software.amazon.awssdk.retry.SdkDefaultRetryPolicies;
+import software.amazon.awssdk.retry.SdkDefaultRetrySettings;
 
 public interface RetryCondition {
 
-    RetryCondition DEFAULT = new OrRetryCondition(new RetryOnStatusCodeCondition(SdkDefaultRetryPolicies.RETRYABLE_STATUS_CODES),
-                                                  new RetryOnExceptionsCondition(SdkDefaultRetryPolicies.RETRYABLE_EXCEPTIONS),
-                                                  new RetryOnErrorCodeCondition(SdkDefaultRetryPolicies.RETRYABLE_ERROR_CODES));
+    RetryCondition DEFAULT = new OrRetryCondition(new RetryOnStatusCodeCondition(SdkDefaultRetrySettings.RETRYABLE_STATUS_CODES),
+                                                  new RetryOnExceptionsCondition(SdkDefaultRetrySettings.RETRYABLE_EXCEPTIONS),
+                                                  new RetryOnErrorCodeCondition(SdkDefaultRetrySettings.RETRYABLE_ERROR_CODES));
 
     RetryCondition NONE = new MaxNumberOfRetriesCondition(0);
 

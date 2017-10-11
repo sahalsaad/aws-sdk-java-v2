@@ -15,6 +15,8 @@
 
 package software.amazon.awssdk.retry.conditions;
 
+import static software.amazon.awssdk.utils.NumericUtils.assertIsPositive;
+
 import software.amazon.awssdk.retry.RetryPolicyContext;
 
 /**
@@ -25,7 +27,7 @@ public class MaxNumberOfRetriesCondition implements RetryCondition {
     private final int maxNumberOfRetries;
 
     public MaxNumberOfRetriesCondition(int maxNumberOfRetries) {
-        this.maxNumberOfRetries = maxNumberOfRetries;
+        this.maxNumberOfRetries = assertIsPositive(maxNumberOfRetries, "maxNumberOfRetries", true);
     }
 
     @Override

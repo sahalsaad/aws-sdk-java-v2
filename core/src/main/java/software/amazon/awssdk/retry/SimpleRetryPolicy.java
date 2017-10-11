@@ -15,12 +15,15 @@
 
 package software.amazon.awssdk.retry;
 
+import java.time.Duration;
+import software.amazon.awssdk.annotation.SdkPublicApi;
 import software.amazon.awssdk.retry.backoff.BackoffStrategy;
 import software.amazon.awssdk.retry.conditions.AndRetryCondition;
 import software.amazon.awssdk.retry.conditions.MaxNumberOfRetriesCondition;
 import software.amazon.awssdk.retry.conditions.RetryCondition;
 
-public class SimpleRetryPolicy implements RetryPolicy {
+@SdkPublicApi
+public final class SimpleRetryPolicy implements RetryPolicy {
 
     private final BackoffStrategy backoffStrategy;
     private final RetryCondition retryCondition;
@@ -29,7 +32,7 @@ public class SimpleRetryPolicy implements RetryPolicy {
     SimpleRetryPolicy(Builder builder) {
         this.backoffStrategy = builder.backoffStrategy != null ? builder.backoffStrategy : BackoffStrategy.DEFAULT;
 
-        int numRetries = builder.numRetries != null ? builder.numRetries : SdkDefaultRetryPolicies.DEFAULT_NUM_RETRIES;
+        int numRetries = builder.numRetries != null ? builder.numRetries : SdkDefaultRetrySettings.DEFAULT_NUM_RETRIES;
         this.numRetries = numRetries;
 
         RetryCondition condition = builder.retryCondition != null ? builder.retryCondition : RetryCondition.DEFAULT;
@@ -38,7 +41,7 @@ public class SimpleRetryPolicy implements RetryPolicy {
     }
 
     @Override
-    public long computeDelayBeforeNextRetry(RetryPolicyContext context) {
+    public Duration computeDelayBeforeNextRetry(RetryPolicyContext context) {
         return backoffStrategy.computeDelayBeforeNextRetry(context);
     }
 
