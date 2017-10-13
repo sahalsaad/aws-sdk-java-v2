@@ -344,8 +344,8 @@ public class MemberModel extends DocumentationModel {
             if (returnTypeIs(List.class)) {
                 appendParagraph(docBuilder,
                                 "If the list returned by the service includes enum values that are not available in the "
-                                + "current SDK version, {@link #%s} will use {@link %s#UNKNOWN} in place of those values in the "
-                                + "list. The raw values returned by the service are available from {@link #%s}.",
+                                + "current SDK version, {@link #%s} will use {@link %s#UNKNOWN_TO_SDK_VERSION} in place of those "
+                                + "values in the list. The raw values returned by the service are available from {@link #%s}.",
                                 getFluentEnumGetterMethodName(), getEnumType(), getFluentGetterMethodName());
             } else if (returnTypeIs(Map.class)) {
                 appendParagraph(docBuilder,
@@ -356,8 +356,8 @@ public class MemberModel extends DocumentationModel {
             } else {
                 appendParagraph(docBuilder,
                                 "If the service returns an enum value that is not available in the current SDK version, "
-                                + "{@link #%s} will return {@link %s#UNKNOWN}. The raw value returned by the service is "
-                                + "available from {@link #%s}.",
+                                + "{@link #%s} will return {@link %s#UNKNOWN_TO_SDK_VERSION}. The raw value returned by the "
+                                + "service is available from {@link #%s}.",
                                 getFluentEnumGetterMethodName(), getEnumType(), getFluentGetterMethodName());
             }
         }

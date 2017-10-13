@@ -54,7 +54,7 @@ public final class EnumClass implements ClassSpec {
         shape.getEnums().forEach(
             e -> enumBuilder.addEnumConstant(e.getName(), TypeSpec.anonymousClassBuilder("$S", e.getValue()).build())
         );
-        enumBuilder.addEnumConstant("UNKNOWN", TypeSpec.anonymousClassBuilder("null").build());
+        enumBuilder.addEnumConstant("UNKNOWN_TO_SDK_VERSION", TypeSpec.anonymousClassBuilder("null").build());
 
         return enumBuilder.build();
     }
@@ -87,7 +87,7 @@ public final class EnumClass implements ClassSpec {
                          .addStatement("return $1T.of($2T.values())\n" +
                                        ".filter(e -> e.toString().equals($3N))\n" +
                                        ".findFirst()\n" +
-                                       ".orElse(UNKNOWN)",
+                                       ".orElse(UNKNOWN_TO_SDK_VERSION)",
                                        Stream.class,
                                        className,
                                        VALUE)

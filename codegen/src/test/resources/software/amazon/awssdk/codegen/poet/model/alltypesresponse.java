@@ -268,7 +268,7 @@ public class AllTypesResponse extends AmazonWebServiceResult<ResponseMetadata> i
      */
     public Map<EnumType, EnumType> mapOfEnumToEnum() {
         return TypeConverter.convert(mapOfEnumToEnum, EnumType::fromValue, EnumType::fromValue,
-                                     (k, v) -> !Objects.equals(k, EnumType.UNKNOWN));
+                                     (k, v) -> !Objects.equals(k, EnumType.UNKNOWN_TO_SDK_VERSION));
     }
 
     /**
@@ -293,7 +293,7 @@ public class AllTypesResponse extends AmazonWebServiceResult<ResponseMetadata> i
      */
     public Map<EnumType, String> mapOfEnumToString() {
         return TypeConverter.convert(mapOfEnumToString, EnumType::fromValue, Function.identity(),
-                                     (k, v) -> !Objects.equals(k, EnumType.UNKNOWN));
+                                     (k, v) -> !Objects.equals(k, EnumType.UNKNOWN_TO_SDK_VERSION));
     }
 
     /**
@@ -342,7 +342,7 @@ public class AllTypesResponse extends AmazonWebServiceResult<ResponseMetadata> i
      */
     public Map<EnumType, SimpleStruct> mapOfEnumToSimpleStruct() {
         return TypeConverter.convert(mapOfEnumToSimpleStruct, EnumType::fromValue, Function.identity(),
-                                     (k, v) -> !Objects.equals(k, EnumType.UNKNOWN));
+                                     (k, v) -> !Objects.equals(k, EnumType.UNKNOWN_TO_SDK_VERSION));
     }
 
     /**
@@ -451,7 +451,7 @@ public class AllTypesResponse extends AmazonWebServiceResult<ResponseMetadata> i
      * Returns the value of the EnumType property for this object.
      * <p>
      * If the service returns an enum value that is not available in the current SDK version, {@link #enumType} will
-     * return {@link EnumType#UNKNOWN}. The raw value returned by the service is available from {@link #enumTypeString}.
+     * return {@link EnumType#UNKNOWN_TO_SDK_VERSION}. The raw value returned by the service is available from {@link #enumTypeString}.
      * </p>
      *
      * @return The value of the EnumType property for this object.
@@ -465,7 +465,7 @@ public class AllTypesResponse extends AmazonWebServiceResult<ResponseMetadata> i
      * Returns the value of the EnumType property for this object.
      * <p>
      * If the service returns an enum value that is not available in the current SDK version, {@link #enumType} will
-     * return {@link EnumType#UNKNOWN}. The raw value returned by the service is available from {@link #enumTypeString}.
+     * return {@link EnumType#UNKNOWN_TO_SDK_VERSION}. The raw value returned by the service is available from {@link #enumTypeString}.
      * </p>
      *
      * @return The value of the EnumType property for this object.

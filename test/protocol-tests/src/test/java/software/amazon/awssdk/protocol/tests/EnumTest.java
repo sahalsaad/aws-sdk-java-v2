@@ -33,63 +33,63 @@ import software.amazon.awssdk.services.protocolrestjson.model.EnumType;
 public class EnumTest {
     @Test
     public void knownEnumFieldsBehaveCorrectly() {
-        assertThat(simulateUnmarshallingEnum("EnumValue1")).isEqualTo(EnumType.ENUM_VALUE1);
-        assertThat(simulateUnmarshallingEnum((String) null)).isEqualTo(null);
-        assertThat(simulateUnmarshallingEnum(EnumType.ENUM_VALUE1)).isEqualTo(EnumType.ENUM_VALUE1);
+        assertThat(convertToEnumWithBuilder("EnumValue1")).isEqualTo(EnumType.ENUM_VALUE1);
+        assertThat(convertToEnumWithBuilder((String) null)).isEqualTo(null);
+        assertThat(convertToEnumWithBuilder(EnumType.ENUM_VALUE1)).isEqualTo(EnumType.ENUM_VALUE1);
     }
 
     @Test
     public void unknownEnumFieldsBehaveCorrectly() {
-        assertThat(simulateUnmarshallingEnum("Foo")).isEqualTo(EnumType.UNKNOWN);
+        assertThat(convertToEnumWithBuilder("Foo")).isEqualTo(EnumType.UNKNOWN_TO_SDK_VERSION);
     }
 
     @Test
     public void knownEnumListFieldsBehaveCorrectly() {
-        assertThat(simulateUnmarshallingEnumList("EnumValue1", "EnumValue2"))
+        assertThat(convertToListEnumWithBuilder("EnumValue1", "EnumValue2"))
                 .containsExactly(EnumType.ENUM_VALUE1, EnumType.ENUM_VALUE2);
-        assertThat(simulateUnmarshallingEnumList(new String[] { null })).containsExactly(new EnumType[] { null });
-        assertThat(simulateUnmarshallingEnumList()).isEmpty();
+        assertThat(convertToListEnumWithBuilder(new String[] {null })).containsExactly(new EnumType[] {null });
+        assertThat(convertToMapEnumWithBuilder()).isEmpty();
     }
 
     @Test
     public void unknownEnumListFieldsBehaveCorrectly() {
-        assertThat(simulateUnmarshallingEnumList("Foo", "EnumValue2")).containsExactly(EnumType.UNKNOWN, EnumType.ENUM_VALUE2);
+        assertThat(convertToListEnumWithBuilder("Foo", "EnumValue2")).containsExactly(EnumType.UNKNOWN_TO_SDK_VERSION, EnumType.ENUM_VALUE2);
     }
 
     @Test
     public void knownEnumMapFieldsBehaveCorrectly() {
-        assertThat(simulateUnmarshallingEnumMap(new SimpleImmutableEntry<>("EnumValue1", "EnumValue2")))
+        assertThat(convertToMapEnumWithBuilder(new SimpleImmutableEntry<>("EnumValue1", "EnumValue2")))
                 .containsExactly(new SimpleImmutableEntry<>(EnumType.ENUM_VALUE1, EnumType.ENUM_VALUE2));
     }
 
     @Test
     public void unknownEnumMapFieldsBehaveCorrectly() {
-        assertThat(simulateUnmarshallingEnumMap(new SimpleImmutableEntry<>("Foo", "EnumValue2")))
+        assertThat(convertToMapEnumWithBuilder(new SimpleImmutableEntry<>("Foo", "EnumValue2")))
                 .isEmpty();
-        assertThat(simulateUnmarshallingEnumMap(new SimpleImmutableEntry<>("Foo", "Foo")))
+        assertThat(convertToMapEnumWithBuilder(new SimpleImmutableEntry<>("Foo", "Foo")))
                 .isEmpty();
-        assertThat(simulateUnmarshallingEnumMap(new SimpleImmutableEntry<>("Foo", "")))
+        assertThat(convertToMapEnumWithBuilder(new SimpleImmutableEntry<>("Foo", "")))
                 .isEmpty();
-        assertThat(simulateUnmarshallingEnumMap(new SimpleImmutableEntry<>("EnumValue1", "Foo")))
-                .containsExactly(new SimpleImmutableEntry<>(EnumType.ENUM_VALUE1, EnumType.UNKNOWN));
-        assertThat(simulateUnmarshallingEnumMap(new SimpleImmutableEntry<>("EnumValue1", "")))
-                .containsExactly(new SimpleImmutableEntry<>(EnumType.ENUM_VALUE1, EnumType.UNKNOWN));
+        assertThat(convertToMapEnumWithBuilder(new SimpleImmutableEntry<>("EnumValue1", "Foo")))
+                .containsExactly(new SimpleImmutableEntry<>(EnumType.ENUM_VALUE1, EnumType.UNKNOWN_TO_SDK_VERSION));
+        assertThat(convertToMapEnumWithBuilder(new SimpleImmutableEntry<>("EnumValue1", "")))
+                .containsExactly(new SimpleImmutableEntry<>(EnumType.ENUM_VALUE1, EnumType.UNKNOWN_TO_SDK_VERSION));
     }
 
-    private EnumType simulateUnmarshallingEnum(String value) {
+    private EnumType convertToEnumWithBuilder(String value) {
         return AllTypesResponse.builder().enumMember(value).build().enumMember();
     }
 
-    private EnumType simulateUnmarshallingEnum(EnumType value) {
+    private EnumType convertToEnumWithBuilder(EnumType value) {
         return AllTypesResponse.builder().enumMember(value).build().enumMember();
     }
 
-    private List<EnumType> simulateUnmarshallingEnumList(String... values) {
+    private List<EnumType> convertToListEnumWithBuilder(String... values) {
         return AllTypesResponse.builder().listOfEnums(values).build().listOfEnums();
     }
 
     @SafeVarargs
-    private final Map<EnumType, EnumType> simulateUnmarshallingEnumMap(Entry<String, String>... values) {
+    private final Map<EnumType, EnumType> convertToMapEnumWithBuilder(Entry<String, String>... values) {
         Map<String, String> enumMap = Stream.of(values).collect(toMap(Entry::getKey, Entry::getValue));
         return AllTypesResponse.builder().mapOfEnumToEnum(enumMap).build().mapOfEnumToEnum();
     }

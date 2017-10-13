@@ -180,7 +180,7 @@ public class AwsServiceModel implements ClassSpec {
             result.add(enumMemberGetter(member));
         }
 
-        result.add(nonEnumMemberGetter(member));
+        result.add(memberGetter(member));
 
         return result.stream();
     }
@@ -198,12 +198,12 @@ public class AwsServiceModel implements ClassSpec {
                          .build();
     }
 
-    private MethodSpec nonEnumMemberGetter(MemberModel member) {
+    private MethodSpec memberGetter(MemberModel member) {
         return MethodSpec.methodBuilder(member.getFluentGetterMethodName())
                          .addJavadoc("$L", member.getGetterDocumentation())
                          .addModifiers(Modifier.PUBLIC)
                          .returns(typeProvider.returnType(member))
-                         .addCode(nonEnumGetterStatement(member))
+                         .addCode(getterStatement(member))
                          .build();
     }
 
@@ -238,8 +238,8 @@ public class AwsServiceModel implements ClassSpec {
     }
 
     private CodeBlock mapEntryFilter(String keyEnumType) {
-        // Don't include UNKNOWN keys in the enum map. Customers should use the string version to get at that data.
-        return keyEnumType != null ? CodeBlock.of("(k, v) -> !$T.equals(k, $T.UNKNOWN)",
+        // Don't include UNKNOWN_TO_SDK_VERSION keys in the enum map. Customers should use the string version to get at that data.
+        return keyEnumType != null ? CodeBlock.of("(k, v) -> !$T.equals(k, $T.UNKNOWN_TO_SDK_VERSION)",
                                                   Objects.class, poetExtensions.getModelClass(keyEnumType))
                                    : CodeBlock.of("(k, v) -> true");
     }
@@ -252,7 +252,7 @@ public class AwsServiceModel implements ClassSpec {
         return CodeBlock.of("$T.identity()", Function.class);
     }
 
-    private CodeBlock nonEnumGetterStatement(MemberModel model) {
+    private CodeBlock getterStatement(MemberModel model) {
         VariableModel modelVariable = model.getVariable();
 
         if ("java.nio.ByteBuffer".equals(modelVariable.getVariableType())) {

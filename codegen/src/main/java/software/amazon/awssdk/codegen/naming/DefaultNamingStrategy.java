@@ -132,8 +132,7 @@ public class DefaultNamingStrategy implements NamingStrategy {
         String result = enumValue;
 
         // Special cases
-        result = result.replaceAll("IoT", "IOT")
-                       .replaceAll("textORcsv", "TEXT_OR_CSV");
+        result = result.replaceAll("textORcsv", "TEXT_OR_CSV");
 
         // Convert non-underscore word boundaries into underscore word boundaries
         result = result.replaceAll("[:/()-. ]+", "_"); // acm-success -> acm_success
@@ -143,7 +142,7 @@ public class DefaultNamingStrategy implements NamingStrategy {
                        .replaceAll("([^A-Z]{2,})V([0-9]+)", "$1_V$2_"); // TestV4 -> Test_V4_
 
         // Add an underscore between camelCased words
-        result = result.replaceAll("([a-z])([A-Z])", "$1_$2"); // AcmSuccess -> Acm_Success
+        result = result.replaceAll("([a-z])([A-Z][a-zA-Z])", "$1_$2"); // AcmSuccess -> Acm_Success
 
         // Add an underscore after acronyms
         result = result.replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2"); // ACMSuccess -> ACM_Success

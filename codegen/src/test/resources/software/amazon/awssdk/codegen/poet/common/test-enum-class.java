@@ -12,7 +12,7 @@ public enum TestEnumClass {
 
     PERMANENT_FAILURE("permanent-failure"),
 
-    UNKNOWN(null);
+    UNKNOWN_TO_SDK_VERSION(null);
 
     private final String value;
 
@@ -36,6 +36,6 @@ public enum TestEnumClass {
         if (value == null) {
             return null;
         }
-        return Stream.of(TestEnumClass.values()).filter(e -> e.toString().equals(value)).findFirst().orElse(UNKNOWN);
+        return Stream.of(TestEnumClass.values()).filter(e -> e.toString().equals(value)).findFirst().orElse(UNKNOWN_TO_SDK_VERSION);
     }
 }
